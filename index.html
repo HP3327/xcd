@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>优惠合集</title>
+<style>
+  /* 1rem = 16px @375 设计宽（与原版 uni-app 一致：fontSize = vw/23.4375） */
+  html { font-size: calc(100vw / 23.4375); }
+  @media (min-width: 521px) { html { font-size: 22.2px; } }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+    background:#fff;
+  }
+  .page { max-width:520px; margin:0 auto; min-height:100vh; background:#fff; }
+
+  /* === 以下全部照搬原版 pages/network 样式（单位换算自原版 CSS） === */
+  .network { width:100%; padding:0 .5625rem; box-sizing:border-box; }
+  .box { width:100%; height:3rem; }                 /* 固定 tab 栏占位 */
+
+  /* tab 栏（fixed，项宽 20%，5 个一屏，超出横滚） */
+  .network-tab {
+    width:calc(100% - 1.125rem); position:fixed; z-index:999;
+    background:#fff; top:0; left:.5625rem; max-width:calc(520px - 1.125rem);
+  }
+  .tab-scroll { white-space:nowrap; width:100%; overflow-x:auto; scrollbar-width:none; }
+  .tab-scroll::-webkit-scrollbar { display:none; }
+  .scroll-content {
+    width:100%; position:relative; display:inline-flex;
+    padding-top:.9375rem; padding-bottom:.3125rem;
+    border-bottom:.03125rem solid #f0f0f0;
+  }
+  .tab-item {
+    width:20%; text-align:center; display:inline-block;
+    padding:.25rem 0; font-size:.875rem; color:#333;
+    transition:color .3s; flex-shrink:0; cursor:pointer; user-select:none;
+  }
+  .tab-item.active { color:#ff1a2a; }
+  .bar {
+    position:absolute; bottom:0; left:0; height:.0625rem;
+    background:#ff1a2a; border-radius:.03125rem;
+    transition:all .3s cubic-bezier(.25,.8,.25,1); pointer-events:none; width:0;
+  }
+
+  /* 卡片（img 175×86 拉伸铺满，content 167） */
+  .shop-item { width:100%; height:5.375rem; margin:1.25rem .1875rem; display:flex; justify-content:space-between; position:relative; cursor:pointer; }
+  .shop-item-img {
+    width:10.9375rem; height:5.375rem; border-radius:.5625rem; overflow:hidden;
+    background-color:#f2f3f5; background-repeat:no-repeat; background-size:100% 100%; flex-shrink:0;
+  }
+  .shop-item-content { width:10.4375rem; margin-left:.75rem; position:relative; }
+  .shop-item-content-title {
+    font-size:.75rem; font-weight:500; color:#000;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    margin-bottom:.375rem;
+  }
+  .shop-item-content-title2 { font-size:.6875rem; color:#606671; height:2.1875rem; }
+  .shop-item-content-btn {
+    width:8.875rem; height:1.875rem; position:absolute; left:0; bottom:0;
+    background-color:rgba(255,183,7,.15); color:#752400;
+    font-size:.75rem; padding-left:.625rem; line-height:1.875rem; text-align:left;
+    border-radius:1.25rem;
+  }
+  .shop-item-content-btn img { width:2.3125rem; height:1.875rem; position:absolute; bottom:0; right:0; display:block; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="network">
+    <div class="network-tab">
+      <div class="tab-scroll">
+        <div class="scroll-content" id="tabs"><div class="bar" id="bar"></div></div>
+      </div>
+    </div>
+    <div class="box"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  var cats = window.CPS_CATS;
+  var tabsEl = document.getElementById('tabs');
+  var barEl  = document.getElementById('bar');
+  var listEl = document.getElementById('list');
+  var current = -1;
+
+  cats.forEach(function(cat, i){
+    var t = document.createElement('div');
+    t.className = 'tab-item';
+    t.id = 'tab-' + cat.id;
+    t.textContent = cat.name;
+    t.onclick = function(){ switchTab(i); };
+    tabsEl.appendChild(t);
+  });
+  var tabEls = tabsEl.querySelectorAll('.tab-item');
+
+  function renderCards(cat){
+    listEl.innerHTML = '';
+    cat.cards.forEach(function(c){
+      var el = document.createElement('div');
+      el.className = 'shop-item';
+      el.innerHTML =
+        '<div class="shop-item-img" style="background-image:url(' + c.img + ')"></div>' +
+        '<div class="shop-item-content">' +
+          '<div class="shop-item-content-title">' + c.title + '</div>' +
+          '<div class="shop-item-content-title2">' + c.title2 + '</div>' +
+          '<div class="shop-item-content-btn"> 今日仅剩' + c.num + '个 ' +
+            '<img src="assets/btn_grab.png" alt="抢">' +
+          '</div>' +
+        '</div>';
+      el.onclick = function(){ window.location.href = c.link; };
+      listEl.appendChild(el);
+    });
+  }
+
+  function moveBar(i){
+    var tab = tabEls[i];
+    var content = document.querySelector('.scroll-content');
+    var tabR = tab.getBoundingClientRect();
+    var cR = content.getBoundingClientRect();
+    barEl.style.width = tabR.width + 'px';
+    barEl.style.transform = 'translateX(' + (tabR.left - cR.left) + 'px)';
+  }
+
+  function switchTab(i){
+    if (current === i) return;
+    current = i;
+    tabEls.forEach(function(t, j){ t.classList.toggle('active', j === i); });
+    renderCards(cats[i]);
+    moveBar(i);
+    tabEls[i].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  current = 0;
+  tabEls[0].classList.add('active');
+  renderCards(cats[0]);
+  window.addEventListener('load', function(){ moveBar(0); });
+  window.addEventListener('resize', function(){ if (current >= 0) moveBar(current); });
+</script>
+</body>
+</html>
