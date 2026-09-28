@@ -19,7 +19,7 @@ window.CPS_CATS = [
       {
         "title": "美团外卖惊喜红包",
         "title2": "美团外卖外卖节 帮你吃更好",
-        "link": "https://kurl08.cn/tsPBa5",
+        "link": "https://kurl05.cn/texhsT",
         "img": "assets/wm_442.jpg",
         "num": 16
       },
